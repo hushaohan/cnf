@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Top-level package for CNF."""
-from . gen import gen
+from . gen import generate
 
 __author__ = """Shaohan Hu"""
 

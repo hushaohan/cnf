@@ -18,6 +18,26 @@ from hashlib import md5
 @click.option('--target-dir', '-o', default=None,
               help='Target directory for output file (omit for ".")')
 def gen(num_vars, num_clauses, len_limit, len_fixed, print_only, target_dir):
+    buf = generate(num_vars, num_clauses, len_limit, len_fixed)
+    fp = md5(buf.encode('utf-8')).hexdigest()
+    if print_only:
+        print(buf)
+    else:
+        target_file = os.path.join(
+            '.' if not target_dir else target_dir,
+            'cnf_var={}_clause={}_len={}_fixed={}_md5={}.cnf'.format(
+                num_vars,
+                num_clauses,
+                len_limit,
+                len_fixed,
+                fp
+            )
+        )
+        with open(target_file, 'w') as f:
+            f.write(buf)
+
+
+def generate(num_vars, num_clauses, len_limit, len_fixed):
     if len_limit > num_vars:
         raise RuntimeError('Invalid clause length limit.')
     clauses = []
@@ -32,26 +52,12 @@ def gen(num_vars, num_clauses, len_limit, len_fixed, print_only, target_dir):
         ]
         if clause not in clauses:
             clauses.append(clause)
-    cnf = '{}\n{}\n'.format(
+    clauses = sorted(clauses)
+    buf = '{}\n{}\n'.format(
         'p cnf {} {}'.format(num_vars, num_clauses),
         '\n'.join(
             [' '.join([str(v) for v in c + [0]])
              for c in clauses]
         )
     )
-    fp = md5(cnf.encode('utf-8')).hexdigest()
-    if print_only:
-        print(cnf)
-    else:
-        target_file = os.path.join(
-            '.' if not target_dir else target_dir,
-            'cnf_var={}_clause={}_len={}_fixed={}_md5={}.cnf'.format(
-                num_vars,
-                num_clauses,
-                len_limit,
-                len_fixed,
-                fp
-            )
-        )
-        with open(target_file, 'w') as f:
-            f.write(cnf)
+    return buf
